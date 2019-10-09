@@ -1,0 +1,41 @@
+#!/bin/sh
+
+#set -x
+
+trap 'on_interrupt' INT
+on_interrupt() {
+   echo "Caught SIGINT"
+   shutdown
+}
+
+trap 'on_term' TERM
+on_term() {
+   echo "Caught SIGTERM"
+   shutdown
+}
+
+shutdown() {
+   echo "Stopping novnc-server"
+   /usr/bin/novnc-server stop
+
+   # Wait for novnc-server to shutdown.
+   retry=5
+   index=0
+   until [ ! -e /var/lock/one/.novnc.lock -o $index -eq $retry ]; do
+      index=$((index+1))
+      sleep 2
+   done
+
+   # Kill any leftover child processes.
+   kill $(ps -o pid= --ppid $$) 2>/dev/null
+   exit 0
+}
+
+
+echo "Starting novnc-server"
+rm -rf /var/lock/one/.novnc.lock
+/usr/bin/novnc-server start
+
+# Forward logs to syslog forever.
+tail -F /var/log/one/novnc.log | logger -t novnc
+

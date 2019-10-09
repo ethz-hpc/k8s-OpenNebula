@@ -1,0 +1,15 @@
+[Unit]
+Description=OpenNebula Web UI Server Logger
+After=opennebula-sunstone.service
+PartOf=opennebula-sunstone.service
+
+[Service]
+StartLimitInterval=0
+ExecStart=/bin/sh -ec 'tail -F /var/log/one/sunstone.log | logger -t sunstone'
+Restart=on-failure
+RestartSec=10s
+RemainAfterExit=yes
+
+[Install]
+WantedBy=opennebula-sunstone.service
+
