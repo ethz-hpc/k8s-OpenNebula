@@ -1,0 +1,59 @@
+ARG PACKAGE_IMAGE=ethzhpc/opennebula-packages:5.8.5
+ARG BASE_IMAGE=ubuntu:18.04
+ARG VERSION=5.8.2
+
+FROM $PACKAGE_IMAGE as builder
+FROM $BASE_IMAGE
+
+
+LABEL maintainer="steven@armstrong.cc"
+
+
+COPY --from=builder /tini /tini
+
+
+# Configure dpkg
+RUN echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selections \
+ && apt-get -y update \
+ && apt-get -y install wget apt-transport-https gnupg \
+ && apt-get -y clean
+
+# Install opennebula-gems
+# RUN wget -q -O- https://downloads.opennebula.org/repo/repo.key | apt-key add - \
+#  && echo "deb https://downloads.opennebula.org/repo/5.8/Ubuntu/18.04 stable opennebula" > /etc/apt/sources.list.d/opennebula.list \
+#  && apt-get -y update \
+#  && apt-get -y install opennebula-tools \
+#  && apt-get -y clean \
+#  && sed -i 's/apt-get install/apt-get -y install/g' /usr/share/one/install_gems \
+#  && echo '0\n' | /usr/share/one/install_gems \
+#  && mkdir -p /var/log/one /var/lock/one \
+#  && chown oneadmin: /var/log/one /var/lock/one
+ 
+ # Install OpenNebula and ruby gems.
+ COPY --from=builder /packages /packages
+ RUN cat /packages/repo.list
+ RUN ln -s /packages/repo.list /etc/apt/sources.list.d/opennebula.list
+ RUN apt-get -y update \
+  && ln -s /bin/true /usr/local/bin/systemd-tmpfiles \
+  && apt-get -y install lsb-release libcurl4-openssl-dev opennebula-tools \
+  && rm -f /usr/local/bin/systemd-tmpfiles \
+  && apt-get -y clean
+ 
+RUN sed -i 's/apt-get install/apt-get -y install/g' /usr/share/one/install_gems
+RUN apt-get -y install libmysqlclient-dev && \
+    echo '0\n' | /usr/share/one/install_gems sunstone
+RUN mkdir -p /var/log/one /var/lock/one
+RUN chown oneadmin: /var/log/one /var/lock/one
+ 
+ 
+# Install opennebula-flow
+RUN apt-get -y update \
+ && apt-get -y install opennebula-flow \
+ && apt-get -y clean
+
+# Logging to /dev/stdout
+RUN sed -i 's|^\(ONEFLOW_LOG *=\).*|\1 "/dev/stdout"|' /usr/lib/one/oneflow/oneflow-server.rb
+RUN echo 'user:password' > /var/lib/one/.one/oneflow_auth
+
+USER oneadmin
+ENTRYPOINT ["/tini", "--", "/usr/bin/ruby", "/usr/lib/one/oneflow/oneflow-server.rb"]
