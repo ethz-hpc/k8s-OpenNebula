@@ -92,8 +92,8 @@ Writing ***OneOperator*** to:
 
  *ETH Zurich*, High performance computing team.
  
- **Nicolas Kowenski**: nicokowe at gmail
- **Steven Armnstrong**: steven at armstrong.cc 
+ * **Nicolas Kowenski**: nicokowe at gmail
+ * **Steven Armnstrong**: steven at armstrong.cc 
  
  
  
