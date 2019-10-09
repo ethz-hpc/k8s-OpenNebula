@@ -65,8 +65,8 @@ By default in the values the mysql pvc have the annotation keep, to not delete i
 you can run `./deleteall.sh` to make shure nothing is there. You can also remove the namespace, named 'openbnebula' in the helmfile.
 
 
-## TO-DO:
-Write the ***OneOperator*** to:
+## On development:
+Writing ***OneOperator*** to:
  * When new node is running (now k8s node with the desire label) add it into the Opennebula cluster.
  * If a node is not available, disable it in Opennebula cluster to stop scheduling things there.
  * If a node is going down as a prestop hook: drain opennebula node (move Vm's) before it stop: With this we can change the Nodes demonset to updateStrategy: Rollingupdate (now is OnDelete)
