@@ -1,0 +1,5 @@
+dependencies:
+- name: mysql
+  version: 1.3.4
+  repository: stable/mysql
+  condition: mysql.enabled
