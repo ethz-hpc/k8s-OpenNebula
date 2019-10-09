@@ -1,0 +1,23 @@
+{{- if and ( .Values.onedeamon.auth.username ) ( .Values.onedeamon.auth.password ) }}
+apiVersion: v1
+kind: Secret
+metadata:
+  name: '{{ include "opennebula.fullname" . }}-auth'
+type: Opaque
+data:
+  one_auth: {{ printf "%s:%s\n" .Values.onedeamon.auth.username .Values.onedeamon.auth.password | b64enc | quote }}
+{{- end }}
+---
+{{- if not .Values.auto_serveradmin_secret.enabled }}
+apiVersion: v1
+kind: Secret
+metadata:
+  name: '{{ include "opennebula.fullname" . }}-serveradmin'
+type: Opaque
+data:
+  serveradmin: {{ printf "serveradmin:%s\n" .Values.sunstone.serveradmin_pass | b64enc | quote }}
+  # ec2_auth: {{ printf "serveradmin:%s\n" .Values.sunstone.serveradmin_pass | b64enc | quote }}
+  # onegate_auth: {{ printf "serveradmin:%s\n" .Values.sunstone.serveradmin_pass | b64enc | quote }}
+  # occi_auth: {{ printf "serveradmin:%s\n" .Values.sunstone.serveradmin_pass | b64enc | quote }}
+  # sunstone_auth: {{ printf "serveradmin:%s\n" .Values.sunstone.serveradmin_pass | b64enc | quote }}
+{{- end }}

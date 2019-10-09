@@ -1,0 +1,25 @@
+{{- if .Values.datastore.enabled }}
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: {{ include "opennebula.fullname" . }}-datastore-images
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: {{ .Values.datastore.size }} 
+  storageClassName: {{ .Values.datastore.storageClass }} 
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: {{ include "opennebula.fullname" . }}-datastore-system
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: {{ .Values.datastore.size }} 
+  storageClassName: {{ .Values.datastore.storageClass }} 
+{{- end }}

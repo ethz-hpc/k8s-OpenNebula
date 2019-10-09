@@ -1,0 +1,25 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ template "opennebula.sunstone.fullname" . }}
+  labels:
+    app: {{ template "opennebula.sunstone.name" . }}
+    chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+    release: "{{ .Release.Name }}"
+    heritage: "{{ .Release.Service }}"
+  annotations:
+  {{- range $key, $value := .Values.sunstone.service.annotations }}
+    {{ $key }}: {{ $value | quote }}
+  {{- end }}
+spec:
+  type: {{ .Values.sunstone.service.type }}
+  ports:
+  - name: sunstone
+    port: {{ .Values.sunstone.port | default 9869 }}
+    targetPort: {{ .Values.sunstone.port | default 9869 }}
+  - name: novnc
+    port: 29876
+    targetPort: 29876
+  selector:
+    app: {{ template "opennebula.sunstone.fullname" . }}
+    release: {{ .Release.Name }}

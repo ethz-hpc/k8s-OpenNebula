@@ -1,0 +1,115 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  labels:
+    app: {{ template "opennebula.sunstone.fullname" . }}
+    chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+    release: "{{ .Release.Name }}"
+    heritage: "{{ .Release.Service }}"
+  name: {{ template "opennebula.node.fullname" . }}
+spec:
+  updateStrategy:
+    type: OnDelete
+  serviceName: {{ template "opennebula.node.fullname" . }}
+  selector:
+    matchLabels:
+      app: {{ template "opennebula.node.fullname" . }}
+      release: "{{ .Release.Name }}"
+  template:
+    metadata:
+      labels:
+        app: {{ template "opennebula.node.fullname" . }}
+        release: {{ .Release.Name }}
+    spec:
+    {{- if .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{ toYaml .Values.imagePullSecrets}}
+    {{- end }}
+      containers:
+      - image: "{{ .Values.hosts.image.repository }}:{{ .Values.hosts.image.tag }}"
+        name: {{ template "opennebula.node.fullname" . }}
+        lifecycle:
+          postStart:
+            exec:
+              command:
+                - "/bin/sh"
+                - "-ec"
+                - |
+                  echo 'Ensuring oneadmin can write to /var/lib/one/datastores' && \
+                  chown oneadmin: /var/lib/one/datastores
+        securityContext:
+          privileged: true
+          capabilities:
+            add: ["NET_ADMIN"]
+        resources:
+          {{- toYaml .Values.hosts.resources | nindent 10 }}
+        volumeMounts:
+        - name: config
+          mountPath: /config
+        - name: oneadmin-ssh-keys
+          mountPath: /var/lib/one/.ssh/authorized_keys
+          subPath: authorized_keys
+        - name: oneadmin-ssh-keys
+          mountPath: /var/lib/one/.ssh/config
+          subPath: config
+        - name: tmpfs-tmp
+          mountPath: /tmp
+        - name: tmpfs-run
+          mountPath: /run
+        - name: tmpfs-run-lock
+          mountPath: /run/lock
+          # readOnly: true
+        - name: host-root
+          mountPath: /host
+      {{- if .Values.datastore.enabled }}
+        - name: datastore-images
+          mountPath: /var/lib/one/datastores/{{ .Values.datastore.id_images}}
+        - name: datastore-system
+          mountPath: /var/lib/one/datastores/{{ .Values.datastore.id_system}}
+      {{- end }}
+      volumes:
+      - name: config
+        configMap:
+          name: {{ template "opennebula.node.fullname" . }}-config
+      - name: oneadmin-ssh-keys
+        secret:
+          secretName: opennebula-ssh-keys
+      {{- if .Values.datastore.enabled }}
+      - name: datastore-images
+        persistentVolumeClaim:
+          claimName: {{ include "opennebula.fullname" . }}-datastore-images
+      - name: datastore-system
+        persistentVolumeClaim:
+          claimName: {{ include "opennebula.fullname" . }}-datastore-system
+      {{- end }}
+      # systemd dependencies
+      - name: tmpfs-tmp
+        emptyDir:
+          medium: Memory
+      - name: tmpfs-run
+        emptyDir:
+          medium: Memory
+      - name: tmpfs-run-lock
+        emptyDir:
+          medium: Memory
+      # /systemd dependencies
+      # libvirt dependencies
+      - name: host-root
+        hostPath:
+          path: /
+      # /libvirt dependencies
+      # hostIPC: false
+      hostNetwork: true
+      # hostPID: false
+      {{- if .Values.hosts.nodeSelector }}
+      nodeSelector:
+        {{ toYaml .Values.hosts.nodeSelector }}
+      {{- end }}
+      {{- if .Values.hosts.tolerations }}
+      tolerations:
+        {{ toYaml .Values.hosts.tolerations }}
+      {{- end }}
+      {{- if .Values.hosts.affinity }}
+      affinity:
+        {{ toYaml .Values.hosts.affinity }}
+      {{- end }}

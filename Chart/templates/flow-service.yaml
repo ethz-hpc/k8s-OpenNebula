@@ -1,0 +1,19 @@
+{{- if .Values.flow.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ template "opennebula.flow.fullname" . }}
+  labels:
+    app: {{ template "opennebula.flow.fullname" . }}
+    chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+    release: "{{ .Release.Name }}"
+    heritage: "{{ .Release.Service }}"
+spec:
+  # type: {{ .Values.sunstone.service.type }}
+  ports:
+  - port: {{ .Values.flow.port | default 2474 }}
+    targetPort: {{ .Values.flow.port | default 2474 }}
+  selector:
+    app: {{ template "opennebula.flow.fullname" . }}
+    release: {{ .Release.Name }}
+{{- end }}

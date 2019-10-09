@@ -1,0 +1,8 @@
+releases:
+  - name: opennebula
+    namespace: opennebula
+    tillerless: true
+    chart: .
+    hooks: # here we add the registry secret for registry.admin.hpc NOTE: it needs Gopass
+      - events: ["postsync"]
+        command: "./importRegCred.sh"        

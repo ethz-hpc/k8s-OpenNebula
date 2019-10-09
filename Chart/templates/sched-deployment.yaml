@@ -1,0 +1,65 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: {{ template "opennebula.sched.fullname" . }}
+    chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+    release: "{{ .Release.Name }}"
+    heritage: "{{ .Release.Service }}"
+  name: {{ template "opennebula.sched.fullname" . }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ template "opennebula.sched.fullname" . }}
+  template:
+    metadata:
+      labels:
+        app: {{ template "opennebula.sched.fullname" . }}
+        release: {{ .Release.Name }}
+    spec:
+      containers:
+      - name: {{ template "opennebula.sched.fullname" . }}
+        image: "{{ .Values.onedeamon.image.repository }}:{{ .Values.onedeamon.image.tag }}"
+        imagePullPolicy: {{ .Values.onedeamon.image.pullPolicy }}
+        args: ["/usr/bin/mm_sched"]
+        ports:
+        - name: onedport
+          containerPort: {{ .Values.onedeamon.port | default 2633 }}
+        # livenessProbe:
+        #   tcpSocket:
+        #     port: onedport
+        #   initialDelaySeconds: 20
+        volumeMounts:
+        - mountPath: /etc/one/sched.conf
+          name: config
+          subPath: sched.conf
+        - mountPath: /var/lib/one/.one/one_auth
+          name: oned-auth
+          subPath: one_auth
+      volumes:
+      - name: config
+        configMap:
+          name: opennebula-sched
+      - name: oned-auth
+        secret:
+          secretName: {{ include "opennebula.fullname" . }}-auth
+    {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+      {{- with .Values.onedeamon.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    {{- with .Values.onedeamon.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- with .Values.onedeamon.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+      # securityContext:
+      #   fsGroup: 9869
+      #   runAsUser: 9869

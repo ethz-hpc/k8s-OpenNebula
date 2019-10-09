@@ -1,0 +1,15 @@
+{{- if contains "memcache" .Values.sunstone.config.sessions }}
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+  name: {{ template "opennebula.memcached.fullname" . }}
+spec:
+  clusterIP: None
+  ports:
+  - port: {{ .Values.sunstone.config.memcached.port }}
+    targetPort: {{ .Values.sunstone.config.memcached.port }}
+  selector:
+    app: {{ template "opennebula.memcached.fullname" . }}
+  type: ClusterIP
+{{- end }}

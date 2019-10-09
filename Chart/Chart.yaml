@@ -1,0 +1,6 @@
+apiVersion: v1
+appVersion: "5.8.4"
+description: openNebula cotnrol-plane charts
+name: opennebula
+version: 0.1.0
+maintainer: zakkg3@gmail.com

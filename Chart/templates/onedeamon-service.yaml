@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ template "opennebula.oned.fullname" . }}
+  labels:
+{{ include "opennebula.labels" . | indent 4 }}
+spec:
+  type: {{ .Values.onedeamon.service.type }}
+  ports:
+    - port: {{ .Values.onedeamon.service.port }}
+      targetPort: {{ .Values.onedeamon.port }}
+      protocol: TCP
+  selector:
+    app: {{ template "opennebula.oned.fullname" . }}
+    release: {{ .Release.Name }}

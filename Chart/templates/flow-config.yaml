@@ -1,0 +1,50 @@
+{{- if .Values.flow.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  labels:
+    app: {{ template "opennebula.flow.fullname" . }}
+    chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+    release: "{{ .Release.Name }}"
+  name: {{ template "opennebula.flow.fullname" . }}
+data:
+  oneflow-server.conf: |
+    ################################################################################
+    # Server Configuration
+    ################################################################################
+
+    # OpenNebula daemon contact information
+    #
+    :one_xmlrpc: http://{{ template "opennebula.oned.fullname" . }}:{{ .Values.onedeamon.service.port }}/RPC2
+
+    # Time in seconds between Life Cycle Manager steps
+    #
+    :lcm_interval: 30
+
+    # Host and port where OneFlow server will run
+    :host: 127.0.0.1
+    :port: {{ .Values.flow.port | default 2474 }}
+
+    # Force deletion of VMs on terminate signal
+    :force_deletion: true
+
+    ################################################################################
+    # Defaults
+    ################################################################################
+
+    # Default cooldown period after a scale operation, in seconds
+    :default_cooldown: 300
+
+    # Default shutdown action. Values: 'terminate', 'terminate-hard'
+    :shutdown_action: 'terminate'
+
+    # Default number of virtual machines (action_number) that will receive the
+    #   given call in each interval defined by action_period, when an action
+    #   is performed on a role.
+    :action_number: 1
+    :action_period: 60
+
+    :vm_name_template: '$ROLE_NAME_$VM_NUMBER_(service_$SERVICE_ID)'
+    :core_auth: cipher
+    :debug_level: {{ .Values.debug_level }}
+{{- end }}

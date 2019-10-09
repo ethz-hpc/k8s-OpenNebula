@@ -1,0 +1,41 @@
+{{- if contains "memcache" .Values.sunstone.config.sessions }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+  name: {{ template "opennebula.memcached.fullname" . }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ template "opennebula.memcached.fullname" . }}
+  template:
+    metadata:
+      labels:
+        app: {{ template "opennebula.memcached.fullname" . }}
+    spec:
+      containers:
+      - image:  {{ .Values.sunstone.config.memcached.image }}:{{ .Values.sunstone.config.memcached.tag }}
+        name: memcached
+        ports:
+        - containerPort: {{ .Values.sunstone.config.memcached.port }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      # imagePullSecrets:
+      # - name: regsecret
+      # nodeSelector: {}
+      # securityContext:
+      #   fsGroup: 9869
+      #   runAsUser: 9869
+      # tolerations: []
+      {{- end }}
+{{- end }}

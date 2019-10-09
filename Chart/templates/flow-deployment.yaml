@@ -1,0 +1,50 @@
+{{- if .Values.flow.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: {{ template "opennebula.flow.fullname" . }}
+    chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+    release: "{{ .Release.Name }}"
+    heritage: "{{ .Release.Service }}"
+  name: {{ template "opennebula.flow.fullname" . }}
+spec:
+  serviceName: {{ template "opennebula.flow.fullname" . }}
+  replicas: {{ .Values.flow.replicaCount | default 1 }}
+  template:
+    metadata:
+      labels:
+        app: {{ template "opennebula.flow.fullname" . }}
+        release: {{ .Release.Name }}
+    spec:
+    {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+      containers:
+      - name: {{ template "opennebula.flow.fullname" . }}
+        image: "{{ .Values.flow.image.repository }}:{{ .Values.flow.image.tag }}"
+        imagePullPolicy: {{ .Values.flow.image.pullPolicy }}
+        ports:
+        - containerPort: {{ .Values.flow.port | default 2474 }}
+        volumeMounts:
+        - mountPath: /etc/one/oneflow-server.conf
+          name: config
+          subPath: oneflow-server.conf
+        - mountPath: /var/lib/one/.one/oneflow_auth
+          name: oneadmin-one-keys
+          subPath: serveradmin
+        # - mountPath: /var/log/one
+        #   name: data
+        #   subPath: log
+        # - mountPath: /var/lib/one/sunstone_vnc_tokens
+        #   name: data
+        #   subPath: sunstone_vnc_tokens
+      volumes:
+      - name: config
+        configMap:
+          name: {{ template "opennebula.flow.fullname" . }}
+      - name: oneadmin-one-keys
+        secret:
+          secretName: {{ include "opennebula.fullname" . }}-serveradmin
+{{- end }}

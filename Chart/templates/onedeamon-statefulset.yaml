@@ -1,0 +1,138 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ template "opennebula.oned.fullname" . }}
+  labels:
+    app: {{ template "opennebula.oned.fullname" . }}
+    release: {{ .Release.Name }}
+    chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+    heritage: {{ .Release.Service }}
+    release: {{ .Release.Name }}
+spec:
+  selector:
+    matchLabels:
+      app: {{ template "opennebula.oned.fullname" . }}
+      release: {{ .Release.Name }}
+  replicas: {{ .Values.onedeamon.replicaCount }}
+  template:
+    metadata:
+      labels:
+        app: {{ template "opennebula.oned.fullname" . }}
+        release: {{ .Release.Name }}
+    spec:
+      initContainers:
+      - command:
+        - /bin/sh
+        - -c
+        - ls {{- if .Values.mysql.enabled }} &&
+          until curl --max-time 5 http://{{ .Release.Name }}-mysql:3306; do echo waiting for {{ .Release.Name }}-mysql; sleep 5; done;
+          {{- end }}
+        image: "{{ .Values.onedeamon.image.repository }}:{{ .Values.onedeamon.image.tag }}"
+        name: init
+        volumeMounts:
+        - mountPath: /var/log/one
+          name: data
+          subPath: log
+    {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+      serviceAccountName: {{ template "opennebula.name" . }}-api
+      automountServiceAccountToken: true
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.onedeamon.image.repository }}:{{ .Values.onedeamon.image.tag }}"
+          imagePullPolicy: {{ .Values.onedeamon.image.pullPolicy }}
+          args: ["/usr/bin/ssh-agent", "/usr/bin/oned", "-f"]
+          env:
+            - name: NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+          lifecycle:
+            postStart:
+              exec:
+                command:
+                  # whait for file sunstone_auth and then create/update the secret serveradmin form the file.
+                  - "/bin/sh"
+                  - "-ec"
+                  - |
+                    echo 'Creating secret in namespace $NAMESPACE Sleeping a litle bit' && \
+                    sleep 7 && \
+                    echo 'Creating secret for the serveradmin user' && \
+                    curl -s -X POST -k https://kubernetes.default.svc/api/v1/namespaces/${NAMESPACE}/secrets \
+                      -H "Authorization: Bearer $( cat /var/run/secrets/kubernetes.io/serviceaccount/token )" \
+                      -H "Content-Type: application/json" \
+                      -H "Accept: application/json" \
+                      -d "{ \"kind\": \"Secret\", \"apiVersion\": \"v1\", \"metadata\": { \"name\": \"{{ include "opennebula.fullname" . }}-serveradmin\", \"namespace\": \"${NAMESPACE}\" }, \"type\": \"Opaque\", \"data\": { \"serveradmin\": \"$( cat /var/lib/one/.one/sunstone_auth | base64 | tr -d '\n' )\" } }" > /dev/null
+          ports:
+            - name: onedport
+              containerPort: {{ .Values.onedeamon.port | default 2633 }}
+              protocol: TCP
+          livenessProbe:
+            tcpSocket:
+              port: onedport
+            initialDelaySeconds: 20
+          # readinessProbe:
+          #   tcpSocket:
+          #     port: onedport
+          #   initialDelaySeconds: 20
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          volumeMounts:
+          - mountPath: /var/lib/one/.one/one_auth
+            name: oned-auth
+            subPath: one_auth
+          - mountPath: /var/lib/one/.ssh
+            name: oneadmin-ssh-keys
+          - mountPath: /etc/one/oned.conf
+            name: oned-config
+            subPath: oned.conf
+          - mountPath: /var/tmp
+            name: data
+            subPath: tmp
+          - mountPath: /var/log/one
+            name: data
+            subPath: log
+        {{- if .Values.datastore.enabled }}
+          - mountPath: /var/lib/one/datastores/{{ .Values.datastore.id_images}}
+            name: datastore-images
+          - mountPath: /var/lib/one/datastores/{{ .Values.datastore.id_system}}
+            name: datastore-system
+        {{- end }}
+      volumes:
+      - name: oned-auth
+        secret:
+          secretName: {{ include "opennebula.fullname" . }}-auth
+      - name: oneadmin-ssh-keys
+        secret:
+          secretName: opennebula-ssh-keys
+      - name: oned-config
+        configMap:
+          name: {{ template "opennebula.oned.fullname" . }}-deamonconfig
+      - name: data
+        emptyDir: {}
+        {{- if .Values.datastore.enabled }}
+      - name: datastore-images
+        persistentVolumeClaim:
+          claimName: {{ include "opennebula.fullname" . }}-datastore-images
+      - name: datastore-system
+        persistentVolumeClaim:
+          claimName: {{ include "opennebula.fullname" . }}-datastore-system
+        {{- end }}
+      {{- with .Values.onedeamon.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    {{- if .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{ toYaml .Values.imagePullSecrets}}
+    {{- end }}
+    {{- with .Values.onedeamon.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- with .Values.onedeamon.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
