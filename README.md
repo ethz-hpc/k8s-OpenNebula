@@ -3,7 +3,8 @@ opennebula @ kuberenetes
 
 # requierments
 
-* Helm + Helmfile
+* Helm 
+* Helmfile (optional)
 * Kuberenetes +1.10 (tested on 1.16)
 
 # Recommended
