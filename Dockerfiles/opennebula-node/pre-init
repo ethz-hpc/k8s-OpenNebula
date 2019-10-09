@@ -1,0 +1,71 @@
+#!/bin/sh
+
+set -xe
+
+# Ensure we have /dev/console for journald to write to.
+if ! [ -e /dev/console ] ; then
+   socat -u pty,link=/dev/console stdout &
+
+   # Wait until socat has setup the link.
+   RETRY=5
+   index=0
+   until [ -e /dev/console -o $index -eq $RETRY ]; do
+      index=$((index+1))
+      sleep 5
+   done
+fi
+
+# HACK
+# Use hosts's /dev to see new devices and allow macvtap
+mkdir /dev.container && {
+   mount --rbind /dev /dev.container
+   mount --rbind /host/dev /dev
+
+   # Keep some devices from the container /dev
+   keep() { mount --rbind /dev.container/$1 /dev/$1 ; }
+   keep shm
+   keep mqueue
+   # Keep ptmx/pts for pty creation
+   keep pts
+   # Keep console for journald logging to stdout.
+   # This has to happen _after_ pts is keept.
+   keep console
+   mount --rbind /dev/pts/ptmx /dev/ptmx
+   # Use the container /dev/kvm if available
+   [ -e /dev.container/kvm ] && keep kvm
+}
+
+mkdir /sys.net.container && {
+   mount --rbind /sys/class/net /sys.net.container
+   mount --rbind /host/sys/class/net /sys/class/net
+}
+
+mkdir /sys.devices.container && {
+   mount --rbind /sys/devices /sys.devices.container
+   mount --rbind /host/sys/devices /sys/devices
+}
+
+
+# Allow the container to load modules.
+ln -s /host/lib/modules /lib/modules
+
+
+# FIXME: understand what this does / if we need it.
+# If no cpuacct,cpu is present, symlink it to cpu,cpuacct
+# Otherwise libvirt and our emulator get confused
+if [ ! -d "/host/sys/fs/cgroup/cpuacct,cpu" ]; then
+   echo "Creating cpuacct,cpu cgroup symlink"
+   mount -o remount,rw /host/sys/fs/cgroup
+   cd /host/sys/fs/cgroup
+   ln -s cpu,cpuacct cpuacct,cpu
+   mount -o remount,ro /host/sys/fs/cgroup
+fi
+
+mount --rbind /host/sys/fs/cgroup /sys/fs/cgroup
+
+
+# FIXME: why is this needed?
+#echo "cgroup_controllers = [ ]" >> /etc/libvirt/qemu.conf
+
+
+exec /lib/systemd/systemd "$@"
