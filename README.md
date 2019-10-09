@@ -69,6 +69,9 @@ you can run `./deleteall.sh` to make shure nothing is there. You can also remove
 
 ## On development:
 
+- Appmarket
+- gate
+
 Writing ***OneOperator*** to:
  * When new node is running (now k8s node with the desire label) add it into the Opennebula cluster.
  * If a node is not available, disable it in Opennebula cluster to stop scheduling things there.
