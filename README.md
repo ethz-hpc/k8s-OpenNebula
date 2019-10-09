@@ -57,16 +57,36 @@ to delete the secrets created by this chart (not tracked by Helm)
 
 
 ### secrets 
+
 If you enabled the `auto_ssh` or `auto_serveradmin_secret`, this resources are not being tracked by helm, so if you delete with `helm delete` the secret will still be there. 
 
 ### Mysql PVC:
+
 By default in the values the mysql pvc have the annotation keep, to not delete it if we uninstall the chart.
 
 you can run `./deleteall.sh` to make shure nothing is there. You can also remove the namespace, named 'openbnebula' in the helmfile.
 
 
 ## On development:
+
 Writing ***OneOperator*** to:
  * When new node is running (now k8s node with the desire label) add it into the Opennebula cluster.
  * If a node is not available, disable it in Opennebula cluster to stop scheduling things there.
  * If a node is going down as a prestop hook: drain opennebula node (move Vm's) before it stop: With this we can change the Nodes demonset to updateStrategy: Rollingupdate (now is OnDelete)
+ 
+ 
+ ## Colaborate
+ 
+ * DCO: Please open pull request with your commits signed (git commit -s)
+ * Better exlicit than implici
+ 
+ 
+ ### Authors
+
+ *ETH Zurich*, High performance computing team.
+ *Nicolas Kowenski*: nicokowe at gmail
+ *Steven Armnstrong*: steven at armstrong.cc 
+ 
+ 
+ 
+ 
