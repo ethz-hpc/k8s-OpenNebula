@@ -17,6 +17,9 @@ opennebula @ kuberenetes
 
 helmfile will install the local chart in `opennebula` namespace.
 
+with helm 
+
+    helm install -n opennebula --namespace opennebula chart/
 
 # Auto ssh keys
 
