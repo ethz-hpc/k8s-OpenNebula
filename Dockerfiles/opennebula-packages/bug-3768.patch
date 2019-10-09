@@ -1,0 +1,87 @@
+diff --git src/im_mad/remotes/kvm-probes.d/kvm.rb src/im_mad/remotes/kvm-probes.d/kvm.rb
+index d698c7f5f..9382721ae 100755
+--- src/im_mad/remotes/kvm-probes.d/kvm.rb
++++ src/im_mad/remotes/kvm-probes.d/kvm.rb
+@@ -29,7 +29,7 @@ end
+ ENV['LANG'] = 'C'
+ ENV['LC_ALL'] = 'C'
+ 
+-nodeinfo_text = `virsh -c qemu:///system nodeinfo`
++nodeinfo_text = `virsh -c #{ENV["LIBVIRT_URI"]} nodeinfo`
+ exit(-1) if $?.exitstatus != 0
+ 
+ nodeinfo_text.split(/\n/).each{|line|
+diff --git src/im_mad/remotes/kvm-probes.d/machines-models.rb src/im_mad/remotes/kvm-probes.d/machines-models.rb
+index ad559b565..da19cb576 100755
+--- src/im_mad/remotes/kvm-probes.d/machines-models.rb
++++ src/im_mad/remotes/kvm-probes.d/machines-models.rb
+@@ -30,7 +30,7 @@ begin
+     machines = []
+     models   = []
+ 
+-    cmd = 'virsh -r -c qemu:///system capabilities'
++    cmd = "virsh -r -c #{ENV["LIBVIRT_URI"]} capabilities"
+     capabilities, e, s = Open3.capture3(cmd)
+     exit(-1) unless s.success?
+ 
+@@ -89,7 +89,7 @@ begin
+             end
+         }
+ 
+-        cmd = "virsh -r -c qemu:///system cpu-models #{a}"
++        cmd = "virsh -r -c #{ENV["LIBVIRT_URI"]} cpu-models #{a}"
+         cpu_models, e, s = Open3.capture3(cmd)
+         break unless s.success?
+ 
+diff --git src/im_mad/remotes/lxd-probes.d/lxd.rb src/im_mad/remotes/lxd-probes.d/lxd.rb
+index e7193077d..1baae5763 100755
+--- src/im_mad/remotes/lxd-probes.d/lxd.rb
++++ src/im_mad/remotes/lxd-probes.d/lxd.rb
+@@ -29,7 +29,7 @@ end
+ ENV['LANG'] = 'C'
+ ENV['LC_ALL'] = 'C'
+ 
+-nodeinfo_text = `virsh -c qemu:///system nodeinfo`
++nodeinfo_text = `virsh -c #{ENV["LIBVIRT_URI"]} nodeinfo`
+ exit(-1) if $?.exitstatus != 0
+ 
+ nodeinfo_text.split(/\n/).each{|line|
+diff --git src/im_mad/remotes/run_probes src/im_mad/remotes/run_probes
+index 239546b1b..8a7ff961b 100755
+--- src/im_mad/remotes/run_probes
++++ src/im_mad/remotes/run_probes
+@@ -22,12 +22,20 @@ source $(dirname $0)/../scripts_common.sh
+ 
+ export LANG=C
+ 
+-HYPERVISOR_DIR=$1.d
++HYPERVISOR="$1"
++HYPERVISOR_DIR="${HYPERVISOR}.d"
+ ARGUMENTS=$*
+ 
+ SCRIPTS_DIR=`dirname $0`
+ cd $SCRIPTS_DIR
+ 
++HYPERVISOR_RC_FILE="$SCRIPTS_DIR/../etc/vmm/$HYPERVISOR/${HYPERVISOR}rc"
++
++if [ -f "$HYPERVISOR_RC_FILE" ]; then
++   . "$HYPERVISOR_RC_FILE"
++fi
++
++
+ function run_dir {
+     (
+     cd $1
+diff --git src/vnm_mad/remotes/lib/command.rb src/vnm_mad/remotes/lib/command.rb
+index 9d43287f9..b017d03b6 100644
+--- src/vnm_mad/remotes/lib/command.rb
++++ src/vnm_mad/remotes/lib/command.rb
+@@ -26,7 +26,7 @@ module VNMNetwork
+       :iptables => "sudo iptables",
+       :ip6tables=> "sudo ip6tables",
+       :ip       => "sudo ip",
+-      :virsh    => "virsh -c qemu:///system",
++      :virsh    => "virsh -c #{ENV["LIBVIRT_URI"]}",
+       :ovs_vsctl=> "sudo ovs-vsctl",
+       :ovs_ofctl=> "sudo ovs-ofctl",
+       :lsmod    => "lsmod",
