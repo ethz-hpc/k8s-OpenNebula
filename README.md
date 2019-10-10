@@ -35,7 +35,7 @@ If you disable this you can run `./createSshkeys.sh` before creating the chart o
 Because serveradmin user is created  by Onedeamon (opennebula core process) we need to create a secret in runtime from that.
 Enable `auto_serveradmin_secret` to create the secret from the oned container.
 
-## datastores
+## Datastores
 
 Enable in values datasteres to create a PVC.
 For now, its needed to create the datastores in the UI or in the cli matching the id's. Dont create one before so the ids starts on 100, 101. 
@@ -62,7 +62,7 @@ https://docs.cert-manager.io/en/latest/getting-started/install/kubernetes.html#a
 
 
 
-## how Upload an image if you dont have internet access :
+## How to Upload an image if you dont have internet access :
 
 For now, until we implement something better: `scp` your image to where oned StatefulSet is running. 
 To get the node where it is running:
