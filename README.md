@@ -80,6 +80,9 @@ This data volume is mounted on oned container on `/var/tmp`, so now you can crea
     
 to delete the secrets created by this chart (not tracked by Helm)
 
+    ./deleteall.ch
+or
+
     kubectl delete ns opennebula
 
 
@@ -105,11 +108,6 @@ Writing ***OneOperator*** to:
  * If a node is not available, disable it in Opennebula cluster to stop scheduling things there.
  * If a node is going down as a prestop hook: drain opennebula node (move Vm's) before it stop: With this we can change the Nodes demonset to updateStrategy: Rollingupdate (now is OnDelete)
  
- 
- ## Colaborate
- 
- * DCO: Please open pull request with your commits signed (git commit -s)
- * Better exlicit than implici
  
  
  ### Authors
