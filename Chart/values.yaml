@@ -1,0 +1,192 @@
+# Default values for openNebula.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+
+imagePullSecrets: []
+  # - name: regcred
+nameOverride: ""
+fullnameOverride: ""
+
+# 3 = Debug. 2= Info
+debug_level: 2
+
+
+# Note all autoamted secrets creations are not being tracked by helm. So if you delete this chart the secrets will still be there.
+# run kubectl delete secrets <secret-name> -n <namespace> to delete them.
+# If you dont delete the secrets and then you re-install the chart in the same namespace it will fail.
+# Image  (alpine + curl + openssh-keygen) to use for automate ssh_keys secret creation
+auto: &auto
+  image: ethzhpc/opennebula-bootstrap
+  tag: "5.8.5"
+  # enabling adds service account, clusterrole and binding
+  enabled: true
+
+# Enable auto_ssh to create ssh keys secrets before install the chart. (templates/auto-*)
+# If you desable this you can run './createSshkeys.sh' before creating the chart.
+# (Note, by default this will push to 'opennebula' namespace)
+auto_ssh:
+  << : *auto
+  enabled: true
+  delete:
+    # Didsbled cause: https://github.com/helm/helm/issues/6149
+    # Delete secrets on delete (serverdmin and ssh_keys)
+    enable: false
+# Enable auto_serveradmin_secret (recommended) to create a kuberenetes secret from the auto generated secret in
+# file /var/lib/one/.one./sunstone_auth by onedeamon. This secret will be mounted in sunstone to "talk" with onedeamon.
+# Note, its not possible at the moment to pre mount a secret in  /var/lib/one/.one/sunstone_auth in onedeamon
+# to bootstrap the db with this secrets.
+auto_serveradmin_secret:
+  << : *auto
+  enabled: true
+
+
+datastore:
+  #recommended to be enabled
+  enabled: true
+  #you will need to create the datastores and make them match this Id's. see README.MD for more information
+  id_images: 100
+  id_system: 101
+  #storageClass: nfs
+  size: 10Gi
+
+
+# Opennebula one deamon.
+onedeamon:
+  image:
+    repository: ethzhpc/opennebula-oned
+    tag: 5.8.5
+    pullPolicy: IfNotPresent
+  port: 2633
+  replicaCount: 1
+  auth: # to mount in /var/lib/one/.one/one_auth
+    username: oneadmin
+    password: "4Dificultp45w0rd"
+  service:
+    type: ClusterIP
+    port: 2633
+  config:
+    default_auth: default
+    #http://docs.opennebula.org/5.8/deployment/open_cloud_host_setup/kvm_driver.html#opennebula-configuration
+    parallel_kvm: false
+
+sunstone:
+  image:
+    repository: ethzhpc/opennebula-sunstone
+    tag: 5.8.5
+    pullPolicy: IfNotPresent
+  replicaCount: 1
+  #http://docs.opennebula.org/5.8/deployment/sunstone_setup/sunstone.html#configuration
+  config:
+    auth: opennebula
+    #memcache for server that spawn more than one process
+    sessions: "memcache"
+    # Only used with Sessions: "memcached"
+    memcached:
+      port: 11211
+      image: "memcached"
+      tag: "1.5.6-alpine"
+    core_auth: cipher
+  port: 9869
+  service:
+    type: ClusterIP
+    port: 9869
+
+scheduler:
+  config:
+    #  MAX_HOST: Maximum number of Virtual Machines dispatched to each host in
+    #            each scheduling action
+    # Use it with onedeamon.config.parallel_kcm=true
+    # comment this for default value = 1
+    max_hosts: 10
+
+hosts:
+  # Enable to deploy deamonset to .
+  enable: true
+
+  image:
+    repository: ethzhpc/opennebula-node
+    tag: 5.8.5
+    pullPolicy: IfNotPresent
+
+  config: |-
+    work 
+    on 
+    progress
+
+  # annotate your nodes to join the oppennebula cluster,
+  # if Nil {} this will be deployed in all possible nodes.
+  nodeSelector:
+    opennebula-node: ""
+
+  affinity: {}
+
+  tolerations: []
+
+  # limits for nodes
+  # cpu: https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/#meaning-of-cpu
+  resources:
+    limits:
+      cpu: 1
+      memory: 4Gi
+
+flow:
+  enabled: false
+  image:
+    repository: ethzhpc/opennebula-flow
+    tag: 5.8.5
+    pullPolicy: IfNotPresent
+  #replicaCount: 1
+  port: 2474
+
+
+mysql:
+  enabled: true
+  mysqlDatabase: "opennebula"
+  mysqlUser: "onedeamon"
+  mysqlPassword: "recommendedToPin4p45w0rd"
+  persistence:
+    # storageClass: "nfs"
+    size: 4Gi
+    annotations:
+      helm.sh/resource-policy: keep
+
+ingress:   # For Sunstone
+  enabled: true
+  annotations:
+      # kubernetes.io/ingress.class: traefik
+      # traefik.ingress.kubernetes.io/frontend-entry-points: https
+      # certmanager.k8s.io/issuer: selfsigned
+    # kubernetes.io/ingress.class: nginx
+    # kubernetes.io/tls-acme: "true"
+  hosts:
+    - host: opennebula.domain
+      paths:
+        - "/"
+
+  tls: []
+    # - hosts:
+    #     - opennebula.domain
+    # recommended to use with certmanager
+    #   secretName: opennebula-selfsigned-cert
+  #  - secretName: chart-example-tls
+  #    hosts:
+  #      - chart-example.local
+
+resources: {}
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  # limits:
+  #   cpu: 100m
+  #   memory: 128Mi
+  # requests:
+  #   cpu: 100m
+  #   memory: 128Mi
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
