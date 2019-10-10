@@ -119,6 +119,9 @@ Writing ***OneOperator*** to:
  * **Nicolas Kowenski**: nicokowe at gmail
  * **Steven Armnstrong**: steven at armstrong.cc 
  
+ Thans to [kvaps](https://github.com/kvaps) for sharing.
+ 
+ 
  
  
  
