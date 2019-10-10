@@ -1,7 +1,7 @@
 # Opennebula
 opennebula @ kuberenetes
 
-# requierments
+# Requierments
 
 * Helm 
 * Helmfile (optional)
@@ -80,7 +80,7 @@ This data volume is mounted on oned container on `/var/tmp`, so now you can crea
     
 to delete the secrets created by this chart (not tracked by Helm)
 
-    ./deleteall.ch
+    ./Chart/deleteall.ch
 or
 
     kubectl delete ns opennebula
