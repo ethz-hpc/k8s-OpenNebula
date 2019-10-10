@@ -35,6 +35,31 @@ If you disable this you can run `./createSshkeys.sh` before creating the chart o
 Because serveradmin user is created  by Onedeamon (opennebula core process) we need to create a secret in runtime from that.
 Enable `auto_serveradmin_secret` to create the secret from the oned container.
 
+## datastores
+
+Enable in values datasteres to create a PVC.
+For now, its needed to create the datastores in the UI or in the cli matching the id's. Dont create one before so the ids starts on 100, 101. 
+http://docs.opennebula.org/5.8/deployment/open_cloud_storage_setup/fs_ds.html#shared-qcow2-transfer-modes
+
+```
+>cat ds.conf
+NAME   = nfs_images
+DS_MAD = fs
+TM_MAD = shared
+>onedatastore create ds.conf
+```
+
+
+We are working on OneProvision. 
+- [ ] create [provision template](http://docs.opennebula.org/5.8/advanced_components/ddc/reference/provision/overview.html#ddc-provision-template) and applyit as a poststart
+http://docs.opennebula.org/5.8/advanced_components/ddc/usage.html
+
+## Secure Opennebula.
+
+Its tested to work with ssl termination at traefik ingress with cert manager.
+For installing cert-manager with helmfile: https://github.com/zakkg3/cert-manager-installer (official cert-manger documentation)
+https://docs.cert-manager.io/en/latest/getting-started/install/kubernetes.html#alternative-installation-methods
+
 
 
 ## how Upload an image if you dont have internet access :
@@ -48,8 +73,6 @@ Use `findmnt` to find the path where the "data" emptyDir is in that node and put
 This data volume is mounted on oned container on `/var/tmp`, so now you can create a new image from host path /var/temp/tourimage.qcow2
 
 *Tested on qcow2 images.*
-
-
 
 # Uninstall Opennebula 
 
