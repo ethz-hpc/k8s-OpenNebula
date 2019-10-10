@@ -57,8 +57,7 @@ http://docs.opennebula.org/5.8/advanced_components/ddc/usage.html
 ## Secure Opennebula.
 
 Its tested to work with ssl termination at traefik ingress with cert manager.
-For installing cert-manager with helmfile: https://github.com/zakkg3/cert-manager-installer (official cert-manger documentation)
-https://docs.cert-manager.io/en/latest/getting-started/install/kubernetes.html#alternative-installation-methods
+For installing cert-manager with helmfile: https://docs.cert-manager.io/en/latest/getting-started/install/kubernetes.html#alternative-installation-methods
 
 
 
