@@ -86,7 +86,7 @@ or
 
 
 
-### secrets 
+### Secrets 
 
 If you enabled the `auto_ssh` or `auto_serveradmin_secret`, this resources are not being tracked by helm, so if you delete with `helm delete` the secret will still be there. 
 
