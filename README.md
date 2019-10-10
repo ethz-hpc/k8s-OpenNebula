@@ -37,16 +37,17 @@ Enable `auto_serveradmin_secret` to create the secret from the oned container.
 
 
 
-## how Upload an image :
+## how Upload an image if you dont have internet access :
 
-For now, until we implement something better: `scp` your image to where oned StatefulSet is running. to get the node:
+For now, until we implement something better: `scp` your image to where oned StatefulSet is running. 
+To get the node where it is running:
 
     kubectl get pods -n opennebula -l app=opennebula-oned -o wide
 
 Use `findmnt` to find the path where the "data" emptyDir is in that node and put your image there.
 This data volume is mounted on oned container on `/var/tmp`, so now you can create a new image from host path /var/temp/tourimage.qcow2
 
-Tested on qcow2 images.
+*Tested on qcow2 images.*
 
 
 
