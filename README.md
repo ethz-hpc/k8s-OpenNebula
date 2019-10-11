@@ -113,12 +113,7 @@ Writing ***OneOperator*** to:
 
  *ETH Zurich*, High performance computing team.
 
- * [**Nicolas Kowenski**](https://github.com/zakkg3): nicokowe at gmail
+ * [**Nicolas Kowenski**](https://github.com/zakkg3)
  * [**Steven Armstrong**](https://github.com/asteven)
 
  Thans to [kvaps](https://github.com/kvaps) for sharing.
-
-
-
-
-
