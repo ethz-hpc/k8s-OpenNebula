@@ -107,9 +107,12 @@ Writing ***OneOperator*** to:
  * If a node is not available, disable it in Opennebula cluster to stop scheduling things there.
  * If a node is going down as a prestop hook: drain opennebula node (move Vm's) before it stop: With this we can change the Nodes demonset to updateStrategy: Rollingupdate (now is OnDelete)
 
+### Images
+
+available at 
 
 
- ### Authors
+### Authors
 
  *ETH Zurich*, High performance computing team.
 
