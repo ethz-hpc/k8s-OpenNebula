@@ -66,10 +66,19 @@ In the values files check:
         nodeSelector:
           opennebula-node: ""
   
-  
+
 The worker pod will run the Opennebula node that creates the VM's.
 This allow us to specify in witch node we want to run this worker pod. In case you are running this on VM's: be aware that nested virtualization could be tricky. So you can have VM's for the control plane and bare metal machines for the workers. In this case anotate the bare-metal nodes to run the worker pod there.
 
+You should see the label something like this:
+```
+kubectl get node some-node-here -o yaml
+apiVersion: v1
+kind: Node
+...
+  labels:
+    opennebula-node: ""
+```
 
 
 ## Secure Opennebula.
