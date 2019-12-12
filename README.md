@@ -54,6 +54,24 @@ We are working on OneProvision.
 - [ ] create [provision template](http://docs.opennebula.org/5.8/advanced_components/ddc/reference/provision/overview.html#ddc-provision-template) and applyit as a poststart
 http://docs.opennebula.org/5.8/advanced_components/ddc/usage.html
 
+
+## Add Opennebula workers.
+
+There is a deamonset that will ran the worker pod on the annotated nodes.
+In the values files check:
+
+# annotate your nodes to join the oppennebula cluster,
+# if Nil {} this will be deployed in all possible nodes.
+  
+        nodeSelector:
+          opennebula-node: ""
+  
+  
+The worker pod will run the Opennebula node that creates the VM's.
+This allow us to specify in witch node we want to run this worker pod. In case you are running this on VM's: be aware that nested virtualization could be tricky. So you can have VM's for the control plane and bare metal machines for the workers. In this case anotate the bare-metal nodes to run the worker pod there.
+
+
+
 ## Secure Opennebula.
 
 Its tested to work with ssl termination at traefik ingress with cert manager.
