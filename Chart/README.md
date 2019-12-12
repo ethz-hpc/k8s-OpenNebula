@@ -71,6 +71,8 @@ For delete evertihing related with opennebula helm deploy please delete it  manu
 
 ## Create registry secret.
 
+This helper script will copy the "regcred" secret from kube-system
+
  run `./createRegCredSecret.sh`
  
 
