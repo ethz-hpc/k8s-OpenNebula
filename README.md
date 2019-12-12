@@ -58,6 +58,8 @@ http://docs.opennebula.org/5.8/advanced_components/ddc/usage.html
 ## Add Opennebula workers.
 
 There is a deamonset that will ran the worker pod on the annotated nodes using the node-selector feature.
+https://kubernetes.io/docs/concepts/configuration/assign-pod-node/
+
 In the values files check:
 
 # annotate your nodes to join the oppennebula cluster,
